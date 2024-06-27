@@ -29,21 +29,26 @@ class GradientField(object):
 
         # Now compute the normalized distance vector
         distance_vector = (self.traj[:, index] - np.array([x,y]))
+        distance_norm = np.linalg.norm(distance_vector)
         # Find traj derivative at that index
         derivative = self.traj_derivative(index)
         
-        gradient_x = 1e-5*derivative[0] + 1e-1*distance_vector[0]
-        gradient_y = 1e-5*derivative[1] + 1e-1*distance_vector[1]
+        gradient_x = np.exp(-distance_norm)*derivative[0] + distance_vector[0]
+        gradient_y = np.exp(-distance_norm)*derivative[1] + distance_vector[1]
+        gradient_norm = np.sqrt(gradient_x**2 + gradient_y**2)
+        ortho_vec = np.array([gradient_y, -gradient_x]) / gradient_norm
 
         for collision in self.collisions:
             vec_x = x - collision[0]
             vec_y = y - collision[1]
             vec_norm = np.sqrt(vec_x**2 + vec_y**2)
 
+            direction = np.sign(np.dot([vec_x, vec_y], ortho_vec))
+
             gradient_mag = np.exp(-gamma * vec_norm)
 
-            gradient_x += 5e-1 * vec_x/vec_norm * gradient_mag
-            gradient_y += 5e-1 * vec_y/vec_norm * gradient_mag
+            gradient_x += direction * ortho_vec[0] * gradient_mag
+            gradient_y += direction * ortho_vec[1] * gradient_mag
 
         return gradient_x, gradient_y
     
