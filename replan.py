@@ -28,7 +28,7 @@ def main():
     # Add random collisions along the path
     collisions_loc = np.zeros([4, 2])
     for i in range(4):
-        collisions_loc[i, :] =  gf.f(np.random.rand())
+        collisions_loc[i, :] =  gf.f(0.2 * (i+1))
         gf.add_collision(collisions_loc[i, :])
     
     # Generate the trajectory
