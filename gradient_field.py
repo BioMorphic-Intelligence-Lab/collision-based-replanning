@@ -30,42 +30,30 @@ class GradientField(object):
         distance_vector = (self.f(t_min).flatten() - np.array([x,y]))
         distance_norm = np.linalg.norm(distance_vector)
 
+        # Find traj derivative at that index
+        derivative = self.df(t_min).flatten()
+
         if distance_norm > 0:
-            # Find traj derivative at that index
-            derivative = self.df(t_min).flatten()
-            
-            gradient_x = (np.exp(-10*distance_norm)*derivative[0] 
-                        + (np.exp(20*distance_norm)-1)*distance_vector[0] / distance_norm)
-            gradient_y = (np.exp(-10*distance_norm)*derivative[1] 
-                        + (np.exp(20*distance_norm)-1)*distance_vector[1] / distance_norm)
-        else:
-            # Find traj derivative at that index
-            derivative = self.df(t_min).flatten()
-            
+            gradient_x = (np.exp(-1*distance_norm)*derivative[0] 
+                        + (np.exp(10*distance_norm)-1)*distance_vector[0] / distance_norm)
+            gradient_y = (np.exp(-1*distance_norm)*derivative[1] 
+                        + (np.exp(10*distance_norm)-1)*distance_vector[1] / distance_norm)
+        else:            
             gradient_x = derivative[0]
             gradient_y = derivative[1]
 
-
-        vel_norm = np.sqrt(derivative[0]**2 + derivative[1]**2)
-        ortho_vec = np.array([derivative[1], -derivative[0]]) / vel_norm
-
-        # Normalize everything to maintain the same speed everywhere
-        gradient_norm = np.sqrt(gradient_x**2 + gradient_y**2)
-        gradient_x = gradient_x / gradient_norm * self.speed
-        gradient_y = gradient_y / gradient_norm * self.speed
 
         for collision in self.collisions:
             vec_x = x - collision[0]
             vec_y = y - collision[1]
             vec_norm = np.sqrt(vec_x**2 + vec_y**2)
 
-            direction = np.sign(np.dot([vec_x, vec_y], ortho_vec))
+            gradient_x += 0.4 / vec_norm**2 * vec_x / vec_norm  
+            gradient_y += 0.4 / vec_norm**2 * vec_y / vec_norm
 
-            gradient_mag = (1 - gamma) / vec_norm
-
-            gradient_x += direction * ortho_vec[0] * gradient_mag
-            gradient_y += direction * ortho_vec[1] * gradient_mag
-
-
+        # Normalize everything to maintain the same speed everywhere
+        gradient_norm = np.sqrt(gradient_x**2 + gradient_y**2)
+        gradient_x = gradient_x / gradient_norm * self.speed
+        gradient_y = gradient_y / gradient_norm * self.speed
 
         return gradient_x, gradient_y

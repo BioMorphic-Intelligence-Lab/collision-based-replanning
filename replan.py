@@ -18,16 +18,16 @@ def main():
 
     # Define the polynomial coefficents for the 2d trajectory
     coeff = np.array(
-        [[1, 2*np.pi, 0],
-         [1, 2*np.pi, np.pi / 2]],
-        #[[0, 0],
-        # [0, 1]],
-        #[[0, 10, 0, 0, 0, 0], # x axis
-        #[0*10, 18.11667*10, -13.25*10**2, 3.59375*10**3, -0.40625*10**4, 0.01614583*10**5]], # y axis
+        #[[1, 2*np.pi, 0],
+        # [1, 2*np.pi, np.pi / 2]],
+        #[[0, 10],
+        # [0, 10]],
+        [[0, 10, 0, 0, 0, 0], # x axis
+        [0*10, 18.11667*10, -13.25*10**2, 3.59375*10**3, -0.40625*10**4, 0.01614583*10**5]], # y axis
                      dtype=float) 
     
     # Init the gradient field class
-    gf = SinusoidalGradientField(t=t, coeff=coeff)
+    gf = GradientField(t=t, coeff=coeff)
 
     # Add random collisions along the path
     collisions_loc = np.zeros([1, 2])
