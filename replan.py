@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from gradient_field import GradientField
+from sinusoidal_gradient_field import SinusoidalGradientField
 
 import matplotlib
 
@@ -16,24 +17,27 @@ def main():
     t = np.linspace(0, 1, n)
 
     # Define the polynomial coefficents for the 2d trajectory
-    coeff = np.array([[0, 10, 0, 0, 0, 0], # x axis
-                      [0*10, 18.11667*10,
-                    -13.25*10**2, 3.59375*10**3,
-                    -0.40625*10**4, 0.01614583*10**5]], # y axis
+    coeff = np.array(
+        [[1, 2*np.pi, 0],
+         [1, 2*np.pi, np.pi / 2]],
+        #[[0, 0],
+        # [0, 1]],
+        #[[0, 10, 0, 0, 0, 0], # x axis
+        #[0*10, 18.11667*10, -13.25*10**2, 3.59375*10**3, -0.40625*10**4, 0.01614583*10**5]], # y axis
                      dtype=float) 
     
     # Init the gradient field class
-    gf = GradientField(t=t, coeff=coeff)
+    gf = SinusoidalGradientField(t=t, coeff=coeff)
 
     # Add random collisions along the path
-    collisions_loc = np.zeros([4, 2])
-    for i in range(4):
-        collisions_loc[i, :] =  gf.f(0.2 * (i+1))
+    collisions_loc = np.zeros([1, 2])
+    for i in range(1):
+        collisions_loc[i, :] =  gf.f(0.3 * (i+1))
         gf.add_collision(collisions_loc[i, :])
     
     # Generate the trajectory
-    range_x = (min(gf.traj[0,:])-1, max(gf.traj[0,:])+1)
-    range_y = (min(gf.traj[1,:])-1, max(gf.traj[1,:])+1)
+    range_x = (min(gf.traj[0,:])-0.5, max(gf.traj[0,:])+0.5)
+    range_y = (min(gf.traj[1,:])-0.1, max(gf.traj[1,:])+0.1)
 
     # Plot gradient field
     resolution = 40
@@ -50,16 +54,17 @@ def main():
             v[i, j] = v1
     
     # Find trajectories from all possible starting points 
-    alt_start_trajs = np.zeros([resolution, resolution, n, 2])
+    alt_start_trajs = np.zeros([resolution, resolution, 10*n, 2])
     for i in range(0, x.shape[0], 5):
         for j in range(0, y.shape[0], 5):
-            alt_start_trajs[i, j, 0, 0] = x[i,j]
-            alt_start_trajs[i, j, 0, 1] = y[i,j]
-            for k in range(1, n):
+            x0 = np.random.uniform(low=range_x[0], high=range_x[1])
+            y0 = np.random.uniform(low=range_y[0], high=range_y[1])
+            alt_start_trajs[i, j, 0, 0] = x0
+            alt_start_trajs[i, j, 0, 1] = y0
+            for k in range(1, 10*n):
                 dx, dy = gf.field(alt_start_trajs[i,j, k - 1, 0],
-                                  alt_start_trajs[i,j, k - 1, 1],
-                                  gamma=0.5)
-                alt_start_trajs[i, j, k, :] = alt_start_trajs[i, j, k-1, :]  + 10.0/n * np.array([dx, dy])
+                                  alt_start_trajs[i,j, k - 1, 1])
+                alt_start_trajs[i, j, k, :] = alt_start_trajs[i, j, k-1, :]  + 1.0/n * np.array([dx, dy])
     
     fig, ax = plt.subplots()
     ax.plot(gf.traj[0, :], gf.traj[1, :], label="Original Trajectory", color="black")
@@ -77,9 +82,10 @@ def main():
         for j in range(0, y.shape[0], 5):
             ax.plot(alt_start_trajs[i, j, :, 0],
                     alt_start_trajs[i, j, :, 1],
-                    zorder=0,
+                    zorder=2,
                     linestyle="--",
                     color="#00A6D6")
+
     
     fig.set_size_inches((8, 20))
     plt.savefig("collision_based_replanning.png", bbox_inches='tight', dpi=500)

@@ -2,11 +2,12 @@ import numpy as np
 from scipy.optimize import minimize
 
 class GradientField(object):
-    def __init__(self, t, coeff, collisions=[]) -> None:
+    def __init__(self, t, coeff, speed=1.0, collisions=[]) -> None:
         self.t = t
         self.coeff = coeff
         self.traj = self.f(t=self.t)
         self.collisions = collisions
+        self.speed = speed
 
     def f(self, t):
         return np.array([np.sum([self.coeff[0, i]*t**i for i in range(len(self.coeff[0]))], axis=0),
@@ -19,7 +20,7 @@ class GradientField(object):
     def add_collision(self, collision: tuple) -> None:
         self.collisions.append(collision)
      
-    def field(self, x, y, gamma=0.99):
+    def field(self, x, y, gamma=0.925):
 
         # Find minimum distance trajectory point
         distances2 = (self.traj[0, :] - x)**2 + (self.traj[1, :] - y)**2
@@ -28,14 +29,30 @@ class GradientField(object):
         # Now compute the normalized distance vector
         distance_vector = (self.f(t_min).flatten() - np.array([x,y]))
         distance_norm = np.linalg.norm(distance_vector)
-        # Find traj derivative at that index
-        derivative = self.df(t_min).flatten()
-        
-        gradient_x = np.exp(-8 * distance_norm)*derivative[0] + np.exp(0.1 * distance_norm)*distance_vector[0] / distance_norm
-        gradient_y = np.exp(-8 * distance_norm)*derivative[1] + np.exp(0.1 * distance_norm)*distance_vector[1] / distance_norm
 
+        if distance_norm > 0:
+            # Find traj derivative at that index
+            derivative = self.df(t_min).flatten()
+            
+            gradient_x = (np.exp(-10*distance_norm)*derivative[0] 
+                        + (np.exp(20*distance_norm)-1)*distance_vector[0] / distance_norm)
+            gradient_y = (np.exp(-10*distance_norm)*derivative[1] 
+                        + (np.exp(20*distance_norm)-1)*distance_vector[1] / distance_norm)
+        else:
+            # Find traj derivative at that index
+            derivative = self.df(t_min).flatten()
+            
+            gradient_x = derivative[0]
+            gradient_y = derivative[1]
+
+
+        vel_norm = np.sqrt(derivative[0]**2 + derivative[1]**2)
+        ortho_vec = np.array([derivative[1], -derivative[0]]) / vel_norm
+
+        # Normalize everything to maintain the same speed everywhere
         gradient_norm = np.sqrt(gradient_x**2 + gradient_y**2)
-        ortho_vec = np.array([gradient_y, -gradient_x]) / gradient_norm
+        gradient_x = gradient_x / gradient_norm * self.speed
+        gradient_y = gradient_y / gradient_norm * self.speed
 
         for collision in self.collisions:
             vec_x = x - collision[0]
@@ -44,9 +61,11 @@ class GradientField(object):
 
             direction = np.sign(np.dot([vec_x, vec_y], ortho_vec))
 
-            gradient_mag = 3 * np.exp(-gamma * vec_norm)
+            gradient_mag = (1 - gamma) / vec_norm
 
             gradient_x += direction * ortho_vec[0] * gradient_mag
             gradient_y += direction * ortho_vec[1] * gradient_mag
+
+
 
         return gradient_x, gradient_y
