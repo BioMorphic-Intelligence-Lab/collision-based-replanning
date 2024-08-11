@@ -18,15 +18,35 @@ class GradientField(object):
         return np.array([np.sum([i * self.coeff[0, i] * t**(i-1) for i in range(1, len(self.coeff[0]))], axis=0),
                          np.sum([i * self.coeff[1, i] * t**(i-1) for i in range(1, len(self.coeff[1]))], axis=0),
                          np.sum([i * self.coeff[2, i] * t**(i-1) for i in range(1, len(self.coeff[2]))], axis=0)])
+    
+    def ddf(self, t):
+        return np.array([np.sum([i * (i-1) * self.coeff[0, i] * t**(i - 2) for i in range(2, len(self.coeff[0]))], axis=0),
+                         np.sum([i * (i-1) * self.coeff[1, i] * t**(i - 2) for i in range(2, len(self.coeff[1]))], axis=0),
+                         np.sum([i * (i-1) * self.coeff[2, i] * t**(i - 2) for i in range(2, len(self.coeff[2]))], axis=0)])
    
     def add_collision(self, collision: tuple) -> None:
         self.collisions.append(collision)
      
+    def find_nearest_t(self, x, iter=2):
+
+        distances2 = (self.traj[0, :] - x[0])**2 + (self.traj[1, :] - x[1])**2 + (self.traj[2, :] - x[2])**2
+        t = self.t[np.argmin(distances2)]
+        
+        #t = 0.5
+
+        dg = lambda t: 2*(np.sum((self.f(t) - x) * self.df(t)))
+        ddg = lambda t: 2*(np.sum(self.df(t)**2 + (self.f(t) - x) * self.ddf(t)))
+
+        for _ in range(iter):
+           t = t - dg(t) / ddg(t)
+
+        return min(max(t, 0), 1)
+
+
     def field(self, x, y, z, gamma=0.925):
 
         # Find minimum distance trajectory point
-        distances2 = (self.traj[0, :] - x)**2 + (self.traj[1, :] - y)**2 + (self.traj[2, :] - z)**2
-        t_min = self.t[np.argmin(distances2)]
+        t_min = self.find_nearest_t(np.array([x, y, z]))
 
         # Now compute the normalized distance vector
         distance_vector = (self.f(t_min).flatten() - np.array([x,y,z]))

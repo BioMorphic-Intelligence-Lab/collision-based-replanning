@@ -15,3 +15,9 @@ class SinusoidalGradientField(GradientField):
             self.coeff[0, 0] * self.coeff[0, 1] * np.cos(self.coeff[0, 1] * t + self.coeff[0, 2]),
             self.coeff[1, 0] * self.coeff[1, 1] * np.cos(self.coeff[1, 1] * t + self.coeff[1, 2]),
             self.coeff[2, 0] * self.coeff[2, 1] * np.cos(self.coeff[2, 1] * t + self.coeff[2, 2])])
+    
+    def ddf(self, t):
+        return np.array([
+            -self.coeff[0, 0] * self.coeff[0, 1]**2 * np.sin(self.coeff[0, 1] * t + self.coeff[0, 2]),
+            -self.coeff[1, 0] * self.coeff[1, 1]**2 * np.sin(self.coeff[1, 1] * t + self.coeff[1, 2]),
+            -self.coeff[2, 0] * self.coeff[2, 1]**2 * np.sin(self.coeff[2, 1] * t + self.coeff[2, 2])])

@@ -11,7 +11,7 @@ matplotlib.rcParams["font.family"] = "serif"
 
 def main():
     # Number of trajectory points
-    n = 1000
+    n = 60
 
     # Init the time vector
     t = np.linspace(0, 1, n)
