@@ -19,9 +19,9 @@ def main():
 
     # Define the polynomial coefficents for the 2d trajectory
     coeff = np.array(
-        [[2.0, 2*np.pi, 0],
-         [2.0, 2*np.pi, np.pi / 2],
-         [1.0, 0, 0]],
+        [[0.0, 2.0, 2 * 2*np.pi, 0],
+         [0.0, 2.0,     2 * np.pi, np.pi / 2],
+         [2.0, 0.5, 2 * np.pi, 0]],
         #[[-2.0, 4.0],
         # [0, 0.0],
         # [1,   0]],
@@ -34,13 +34,14 @@ def main():
     gf = SinusoidalGradientField(t=t, coeff=coeff)
 
     # Add random collisions along the path
-    collisions_loc = np.zeros([2, 3])
+    collisions_loc = np.zeros([3, 3])
     for i in range(0, 1, 2):
         loc = gf.f(0.3 * (i + 1))
         der = gf.df(0.3 * (i + 1))
         rot = Rotation.from_rotvec(np.array([0, 0, 1]) * np.arctan2(der[1], der[0])).as_matrix()
-        collisions_loc[i, :] =  loc - rot @ np.array([0, 0.22, 0])
-        collisions_loc[i+1, :] =  loc + rot @ np.array([0, 0.22, 0])
+        collisions_loc[i, :] = loc
+        collisions_loc[i+1, :] =  loc - rot @ np.array([0, 0.22, 0])
+        collisions_loc[i+2, :] =  loc + rot @ np.array([0, 0.22, 0])
         gf.add_collision(collisions_loc[i, :])
         gf.add_collision(collisions_loc[i+1, :])
     
@@ -49,7 +50,7 @@ def main():
 
     range_x = (-np.abs(maxVal)-0.25, maxVal+0.25)
     range_y = (-np.abs(maxVal)-0.25, maxVal+0.25)
-    range_z = (-np.abs(maxVal)-0.25, maxVal+0.25)
+    range_z = (0.0, maxVal+0.5)
 
     # Plot gradient field
     resolution = 6

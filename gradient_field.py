@@ -99,9 +99,9 @@ class GradientField(object):
 
             vec_norm = np.sqrt(vec_x**2 + vec_y**2 + vec_z**2)
 
-            coll_contrib_x += 0.5 * kappa / vec_norm**2 * vec_x / vec_norm
-            coll_contrib_y += 0.5 * kappa / vec_norm**2 * vec_y / vec_norm
-            coll_contrib_z += 0.5 * kappa / vec_norm**2 * vec_z / vec_norm
+            coll_contrib_x += 0.75 * kappa / vec_norm**2 * vec_x / vec_norm
+            coll_contrib_y += 0.75 * kappa / vec_norm**2 * vec_y / vec_norm
+            coll_contrib_z += 0.75 * kappa / vec_norm**2 * vec_z / vec_norm
 
         # Project the point source contribution into the plane defined
         # by the trajectory velocity as its normal. That way we do not interfere
