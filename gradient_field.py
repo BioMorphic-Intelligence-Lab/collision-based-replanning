@@ -43,7 +43,7 @@ class GradientField(object):
         return min(max(t, 0), 1)
 
     def get_orthogonal_unit_vec(self, vec):
-        v = np.zeros(3)
+        v = np.array([0, 0, 1], dtype=float)
         if np.isclose(vec, [1, 0, 0]).all():
             v = np.array([0, 1, 0])
         elif np.isclose(vec, [0, 1, 0]).all():
@@ -74,15 +74,15 @@ class GradientField(object):
 
         if distance_norm > 0:
             gradient_x += (1.0 / (kappa * distance_norm) * derivative[0]
-                        + kappa * distance_norm * distance_vector[0] / distance_norm)
+                        + kappa * distance_vector[0])
             gradient_y += (1.0 / (kappa * distance_norm) * derivative[1]
-                        + kappa * distance_norm * distance_vector[1] / distance_norm)
+                        + kappa * distance_vector[1])
             gradient_z += (1.0 / (kappa * distance_norm) * derivative[2]
-                        + kappa * distance_norm * distance_vector[2] / distance_norm)
+                        + kappa * distance_vector[2])
         elif t_min >= 1:
-            gradient_x = kappa * distance_norm * distance_vector[0] / distance_norm
-            gradient_y = kappa * distance_norm * distance_vector[1] / distance_norm
-            gradient_z = kappa * distance_norm * distance_vector[2] / distance_norm
+            gradient_x = kappa * distance_vector[0]
+            gradient_y = kappa * distance_vector[1]
+            gradient_z = kappa * distance_vector[2]
         else:            
             gradient_x += derivative[0]
             gradient_y += derivative[1]
@@ -99,9 +99,12 @@ class GradientField(object):
 
             vec_norm = np.sqrt(vec_x**2 + vec_y**2 + vec_z**2)
 
-            coll_contrib_x += 0.75 * kappa / vec_norm**2 * vec_x / vec_norm
-            coll_contrib_y += 0.75 * kappa / vec_norm**2 * vec_y / vec_norm
-            coll_contrib_z += 0.75 * kappa / vec_norm**2 * vec_z / vec_norm
+            if vec_norm > 100.0:
+                continue
+
+            coll_contrib_x += kappa / vec_norm**3 * vec_x / vec_norm
+            coll_contrib_y += kappa / vec_norm**3 * vec_y / vec_norm
+            coll_contrib_z += kappa / vec_norm**3 * vec_z / vec_norm
 
         # Project the point source contribution into the plane defined
         # by the trajectory velocity as its normal. That way we do not interfere
